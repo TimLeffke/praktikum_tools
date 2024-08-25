@@ -265,22 +265,27 @@ class Plot:
     def delete(self): plt.close('all')
 
 def exp(x):
+    """Return the natural exponential of x."""
     if type(x) is ErrValue: return x.exp()
     else: return np.exp(x)
 
 def log(x):
+    """Return the natural log of x."""
     if type(x) is ErrValue: return x.log()
     else: return np.log(x)
 
 def sin(x):
+    """Return the sine of x."""
     if type(x) is ErrValue: return x.sin()
     else: return np.sin(x)
 
 def cos(x):
+    """Return the cosine of x."""
     if type(x) is ErrValue: return x.cos()
     else: return np.cos(x)
 
 def load_from_csv(path: str, delimiter = ','):
+    """Return values from a comma-seperated file as a list of numpy arrays."""
     with open(path, 'r') as f:
         values = [[]]
         for Line in f.readlines():
@@ -294,6 +299,7 @@ def load_from_csv(path: str, delimiter = ','):
     return values
 
 def linear_fit(x, y):
+    """Perform a linear fit on x and y and return the slope, y-intercept and chi-squared."""
     if isinstance(x, ErrValue):
         return linear_fit_both_error(x, y)
     x, _ = unpack_error(x)
@@ -367,6 +373,7 @@ def linear_fit_both_error(x, y):
     return ErrValue(m, merr), ErrValue(n, nerr), chi_sq
 
 def fit_func(f, x, y, *args, **kwargs):
+    """Fit an arbitrary function and return the fitted function parameters."""
     from scipy.optimize import curve_fit
 
     x, _ = unpack_error(x)
@@ -409,6 +416,7 @@ def smooth_range(x, n = 1000):
 
 
 def fit_gauss(x, y, n, background = None, A0 = None, sigma0 = None, mu0 = None, background0 = None, A_range = None, sigma_range = None, mu_range = None, background_range = None, *args, **kwargs):
+    """Fit a gauss curve with optional background and return the fitting parameters."""
     try:
         from gauss import getter
     except ImportError:
