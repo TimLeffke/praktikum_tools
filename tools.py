@@ -409,7 +409,10 @@ def smooth_range(x, n = 1000):
 
 
 def fit_gauss(x, y, n, background = None, A0 = None, sigma0 = None, mu0 = None, background0 = None, A_range = None, sigma_range = None, mu_range = None, background_range = None, *args, **kwargs):
-    from gauss import getter
+    try:
+        from gauss import getter
+    except ImportError:
+        raise Exception("No gauss function file found. Try generating it using the create_functions_file.py script!")
     f = getter(n, background)
     
     if background0: background_size = len(background0)
