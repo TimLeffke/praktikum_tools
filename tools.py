@@ -46,10 +46,6 @@ class ErrValue:
             return ErrValue(other.value/self.value, np.sqrt((other.value/self.value**2 * self.error)**2 + (other.error/self.value)**2))
         else:
             return ErrValue(other/self.value, np.abs(other/self.value**2 * self.error))
-    def __rtruediv(self, other):
-        if type(other) in (int, float, np.ndarray, np.float64, np.float32, np.int64, np.int32):
-            return ErrValue(other/self.value, self.error*other/self.value**2)
-        else: raise TypeError(f'Type {type(other)} is not supported!')
     def __pow__(self, other):
         if type(other) is ErrValue:
             return ErrValue(self.value**other.value, np.sqrt((other.value*self.error*self.value**(other.value-1))**2 + (self.value**other.value*np.log(self.value)*other.error)**2))
