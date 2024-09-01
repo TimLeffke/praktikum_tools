@@ -1,4 +1,4 @@
-from tools import exp
+from praktikum_tools import exp
 
 def gauss(x, A, sigma, mu): return A * exp(-.5 * ((x - mu) / sigma)**2)
 
