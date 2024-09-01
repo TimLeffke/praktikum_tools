@@ -6,7 +6,6 @@ x = np.linspace(0, 3*np.pi, 100)
 
 # x values should have an error of 0.05
 x = tl.ErrValue(x, 0.05)
-
 y = tl.sin(x)
 
 
