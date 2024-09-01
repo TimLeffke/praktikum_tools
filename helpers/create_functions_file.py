@@ -32,7 +32,7 @@ def generate_getter():
     return f'def getter(n, background = None):\n\treturn {func_dict}' + "[f'gauss{n}' + ('_' + background if background else '')]"
 
 
-header = '''from tools import exp
+header = '''from praktikum_tools import exp
 
 def gauss(x, A, sigma, mu): return A * exp(-.5 * ((x - mu) / sigma)**2)
 
