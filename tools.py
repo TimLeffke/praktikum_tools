@@ -207,8 +207,8 @@ class Plot:
             if show_error:
                 plt.fill_between(rang*self.scale_x, ((m+merr)*rang + (n+nerr))*self.scale_y, ((m-merr)*rang + (n-nerr))*self.scale_y, alpha = 0.15)
         return self
-    def func(self, f, x, param = (), *args, **kwargs):
-        x = smooth_range(x)
+    def func(self, f, x, param = (), overdraw = True, **kwargs):
+        x = smooth_range(x, overdraw = overdraw)
         self.line(x, f(x, *param), *args, **kwargs)
         return self
     def area(self, value, stop = None, color = 'green', alpha = 0.5, autoscale = True, **kwargs):
@@ -405,14 +405,20 @@ def gauss(x, paras: dict):
 
 
 
-def smooth_range(x, n = 1000):
+def smooth_range(x, n = 1000, overdraw = False):
     if type(x) is tuple:
         xmin, _ = unpack_error(x[0])
         xmax, _ = unpack_error(x[1])
-        return np.linspace(xmin, xmax, n)
     else:
         x, _ = unpack_error(x)
-        return np.linspace(x.min(), x.max(), n)
+        xmin = x.min()
+        xmax = x.max()
+
+    if overdraw:
+        padding = (xmax - xmin) / 4
+        xmin -= padding
+        xmax += padding
+    return np.linspace(xmin, xmax, n)
 
 
 def fit_gauss(x, y, n, background = None, A0 = None, sigma0 = None, mu0 = None, background0 = None, A_range = None, sigma_range = None, mu_range = None, background_range = None, *args, **kwargs):
@@ -422,7 +428,7 @@ def fit_gauss(x, y, n, background = None, A0 = None, sigma0 = None, mu0 = None, 
     except ImportError:
         raise Exception("No gauss function file found. Try generating it using the create_functions_file.py script!")
     f = getter(n, background)
-    
+
     if background0: background_size = len(background0)
     else: background_size = 2 * (background == 'linear') + 3 * (background == 'quadratic')
 
@@ -455,7 +461,7 @@ def fit_gauss(x, y, n, background = None, A0 = None, sigma0 = None, mu0 = None, 
         else:
             bounds_min[background_size:background_size + n] = [Value - A_range for Value in A0]
             bounds_max[background_size:background_size + n] = [Value + A_range for Value in A0]
-    if sigma_range: 
+    if sigma_range:
         if type(background_range) is list:
             bounds_min[background_size + n:background_size + 2*n] = [max(0, Value - Range) for Value, Range in zip(sigma0, sigma_range)]
             bounds_max[background_size + n:background_size + 2*n] = [Value + Range for Value, Range in zip(sigma0, sigma_range)]
