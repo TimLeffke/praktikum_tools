@@ -209,7 +209,7 @@ class Plot:
         return self
     def func(self, f, x, param = (), overdraw = True, **kwargs):
         x = smooth_range(x, overdraw = overdraw)
-        self.line(x, f(x, *param), **kwargs)
+        self.line(x, f(x, *param), autoscale = not overdraw, **kwargs)
         return self
     def area(self, value, stop = None, color = 'green', alpha = 0.5, autoscale = True, **kwargs):
         with self.autoscale(autoscale):
