@@ -1,5 +1,5 @@
 import numpy as np
-import tools as tl
+import praktikum_tools as tl
 
 def sin(x, A, omega, phase):
     return A * tl.sin(x * omega + phase)
@@ -15,5 +15,5 @@ A, omega, phase = tl.fit_func(sin, x, y)
 
 p = tl.Plot(xlabel = "x", ylabel = r"$A\sin(\varphi_0 + \omega x)$")
 p.add(x, y)
-p.func(sin, (x[0] - 1, x[-1] + 1), [A, omega, phase], autoscale = False)
+p.func(sin, x, [A, omega, phase], autoscale = False)
 p.show()

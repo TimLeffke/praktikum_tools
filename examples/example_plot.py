@@ -1,5 +1,5 @@
 import numpy as np
-import tools as tl
+import praktikum_tools as tl
 
 # Create x values
 x = np.linspace(0, 3*np.pi, 100)
