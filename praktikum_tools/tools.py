@@ -133,7 +133,7 @@ class ErrValue:
         return round(self, ndigits)
 
 class Style:
-    style = 'seaborn'
+    style = 'default'
     dpi = 300
 
 plt.style.use(Style.style)
