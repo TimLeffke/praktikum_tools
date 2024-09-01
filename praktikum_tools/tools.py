@@ -398,7 +398,7 @@ def unpack_error(x):
 
 
 def gauss(x, paras: dict):
-    from gauss import getter
+    from praktikum_tools.functions.gauss import getter
     background = [None, 'linear', 'quadratic'][max(0, len(paras['background']) - 1) if hasattr(paras['background'], '__len__') else 0]
     f = getter(len(paras['A']), background = background)
     return f(x, *paras['background'], *paras['A'], *paras['sigma'], *paras['mu'])
@@ -423,10 +423,7 @@ def smooth_range(x, n = 1000, overdraw = False):
 
 def fit_gauss(x, y, n, background = None, A0 = None, sigma0 = None, mu0 = None, background0 = None, A_range = None, sigma_range = None, mu_range = None, background_range = None, *args, **kwargs):
     """Fit a gauss curve with optional background and return the fitting parameters."""
-    try:
-        from gauss import getter
-    except ImportError:
-        raise Exception("No gauss function file found. Try generating it using the create_functions_file.py script!")
+    from praktikum_tools.functions.gauss import getter
     f = getter(n, background)
 
     if background0: background_size = len(background0)

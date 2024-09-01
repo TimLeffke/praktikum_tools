@@ -1,4 +1,4 @@
-file = 'gauss.py'
+file = '../praktikum_tools/functions/gauss.py'
 
 functions = []
 
