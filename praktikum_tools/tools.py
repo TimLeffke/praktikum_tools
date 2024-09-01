@@ -211,6 +211,13 @@ class Plot:
         x = smooth_range(x, overdraw = overdraw)
         self.line(x, f(x, *param), autoscale = not overdraw, **kwargs)
         return self
+    def gauss(self, x, param, overdraw = True, draw_individual = False, **kwargs):
+        x = smooth_range(x, overdraw = overdraw)
+        if draw_individual:
+            for A, Sigma, Mu in zip(param['A'], param['sigma'], param['mu']):
+                self.func(gauss, x, [{'A': [A], 'sigma': [Sigma], 'mu': [Mu], 'background': []}], overdraw = overdraw, **kwargs)
+        else:
+            self.func(gauss, x, [param], overdraw, **kwargs)
     def area(self, value, stop = None, color = 'green', alpha = 0.5, autoscale = True, **kwargs):
         with self.autoscale(autoscale):
             if stop is None:
