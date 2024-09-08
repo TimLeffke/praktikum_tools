@@ -133,7 +133,7 @@ class ErrValue:
         return round(self, ndigits)
 
 class Style:
-    style = 'default'
+    style = 'ggplot'
     dpi = 300
 
 plt.style.use(Style.style)
