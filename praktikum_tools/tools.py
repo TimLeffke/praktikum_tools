@@ -116,6 +116,8 @@ class ErrValue:
         return ErrValue(np.sin(self.value), np.abs(np.cos(self.value)*self.error))
     def cos(self):
         return ErrValue(np.cos(self.value), np.abs(np.sin(self.value)*self.error))
+    def tan(self):
+        return ErrValue(np.tan(self.value), np.abs(self.error/np.cos(self.value)**2))
     def from_list(l, error = None):
         if error is None:
             if type(l) is ErrValue or type(l[0]) is ErrValue:
@@ -290,6 +292,11 @@ def cos(x):
     """Return the cosine of x."""
     if type(x) is ErrValue: return x.cos()
     else: return np.cos(x)
+
+def tan(x):
+    """Return the tangent of x."""
+    if type(x) is ErrValue: return x.tan()
+    else: return np.tan(x)
 
 def load_from_csv(path: str, delimiter = ','):
     """Return values from a comma-seperated file as a list of numpy arrays."""
