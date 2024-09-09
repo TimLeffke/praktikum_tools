@@ -302,13 +302,16 @@ def load_from_csv(path: str, delimiter = ','):
     """Return values from a comma-seperated file as a list of numpy arrays."""
     with open(path, 'r') as f:
         values = [[]]
-        for Line in f.readlines():
+        for Line_num, Line in enumerate(f.readlines()):
             Line = Line.split('#')[0]
             if not Line: continue
             for i, Element in enumerate(Line.strip().split(delimiter)):
                 if i >= len(values):
                     values.append([None for _ in range(len(values[0])-1)])
-                values[i].append(float(Element))
+                try:
+                    values[i].append(float(Element))
+                except ValueError:
+                    raise ValueError(f"Couldn't interpret value '{Element}' in line {Line_num} as float!")
     values = [np.array(Element) for Element in values]
     return values
 
