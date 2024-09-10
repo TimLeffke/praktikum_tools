@@ -315,6 +315,33 @@ def load_from_csv(path: str, delimiter = ','):
     values = [np.array(Element) for Element in values]
     return values
 
+def save_as_csv(path: str, *data, labels = None, round_to = None):
+    with open(path, "w") as f:
+        if labels:
+            labels_to_write = []
+            for Data, Label in zip(data, labels):
+                labels_to_write.append(Label)
+                if type(Data) is ErrValue:
+                    labels_to_write.append(Label + "-Error")
+            f.write("# " + ", ".join(labels_to_write) + "\n")
+        for i in range(len(data[0])):
+            Line = []
+            if round_to:
+                for Data in data:
+                    if type(Data) is ErrValue:
+                        Line.append(str(round(Data[i].value, round_to)))
+                        Line.append(str(round(Data[i].error, round_to)))
+                    else:
+                        Line.append(str(round(Data[i], round_to)))
+            else:
+                for Data in data:
+                    if type(Data) is ErrValue:
+                        Line.append(str(Data[i].value))
+                        Line.append(str(Data[i].error))
+                    else:
+                        Line.append(str(Data[i]))
+            f.write(", ".join(Line) + "\n")
+
 def linear_fit(x, y):
     """Perform a linear fit on x and y and return the slope, y-intercept and chi-squared."""
     if isinstance(x, ErrValue):
