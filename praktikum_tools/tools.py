@@ -10,7 +10,10 @@ class ErrValue:
         if not type(error) in (int, float, np.ndarray, np.float64, np.float32, np.int64, np.int32):
             raise TypeError(f'Value of type {type(error)} not supported!')
         self.value = value
-        self.error = error
+        if type(value) is np.ndarray and not type(error) is np.ndarray:
+            self.error = np.ones(value.shape) * error
+        else:
+            self.error = error
     def __add__(self, other):
         if type(other) in (int, float, np.ndarray, np.float64, np.float32, np.int64, np.int32):
             return ErrValue(self.value + other, self.error)
