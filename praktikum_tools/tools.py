@@ -58,6 +58,8 @@ class ErrValue:
             return ErrValue(other**self.value, np.abs(other**self.value*np.log(self.value)*self.error))
     def __neg__(self):
         return -1*self
+    def sqrt(self):
+        return self**.5
     def exp(self):
         return ErrValue(np.exp(self.value), np.exp(self.value)*self.error)
     def log(self):
@@ -272,6 +274,11 @@ class Plot:
         plt.savefig(path, dpi = Style.dpi, **kwargs)
         return self
     def delete(self): plt.close('all')
+
+def sqrt(x):
+    """Return the square root of x."""
+    if type(x) is ErrValue: return x.sqrt()
+    else: return np.sqrt(x)
 
 def exp(x):
     """Return the natural exponential of x."""
