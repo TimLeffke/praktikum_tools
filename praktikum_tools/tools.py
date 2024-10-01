@@ -320,7 +320,7 @@ def load_from_csv(path: str, delimiter = ','):
                 except ValueError:
                     raise ValueError(f"Couldn't interpret value '{Element}' in line {Line_num} as float!")
     if len(values) == 1:
-        return np.array(values)
+        return np.array(values[0])
     else:
         values = [np.array(Element) for Element in values]
         return values
