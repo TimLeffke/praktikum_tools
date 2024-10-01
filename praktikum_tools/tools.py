@@ -174,9 +174,13 @@ class Plot:
         self.scale_x = scale_x
         self.scale_y = scale_y
         self.legend_color = legend_color
-    def add(self, x, y, show_error = True, autoscale = True, **kwargs):
-        y, yerr = unpack_error(y)
-        x, xerr = unpack_error(x)
+    def add(self, x, y = None, show_error = True, autoscale = True, **kwargs):
+        if y is None:
+            y, yerr = unpack_error(x)
+            x, xerr = unpack_error(list(range(len(y))))
+        else:
+            y, yerr = unpack_error(y)
+            x, xerr = unpack_error(x)
 
         with self.autoscale(autoscale):
             if show_error:
