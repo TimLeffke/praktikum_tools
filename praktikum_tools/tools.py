@@ -319,8 +319,11 @@ def load_from_csv(path: str, delimiter = ','):
                     values[i].append(float(Element))
                 except ValueError:
                     raise ValueError(f"Couldn't interpret value '{Element}' in line {Line_num} as float!")
-    values = [np.array(Element) for Element in values]
-    return values
+    if len(values) == 1:
+        return np.array(values)
+    else:
+        values = [np.array(Element) for Element in values]
+        return values
 
 def save_as_csv(path: str, *data, labels = None, round_to = None):
     with open(path, "w") as f:
