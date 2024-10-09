@@ -11,19 +11,25 @@ def generate_gauss(n, background = None):
     else:
         functions.append(f'gauss{n}')
 
-    if background == 'linear':
+    if background == 'const':
+        parameters += ', b'
+    elif background == 'linear':
         parameters += ', m, n'
     elif background == 'quadratic':
         parameters += ', a, b, c'
+
     for i in range(n):
         parameters += f', A{i}'
     for i in range(n):
         parameters += f', sigma{i}'
     for i in range(n):
         parameters += f', mu{i}'
-    if background == 'linear':
+
+    if background == 'const':
+        return f"def gauss{n}_const({parameters}): return sum_of_gaussians_const({parameters})\n"
+    elif background == 'linear':
         return f"def gauss{n}_linear({parameters}): return sum_of_gaussians_linear({parameters})\n"
-    if background == 'quadratic':
+    elif background == 'quadratic':
         return f"def gauss{n}_quadratic({parameters}): return sum_of_gaussians_quadratic({parameters})\n"
     return f"def gauss{n}({parameters}): return sum_of_gaussians({parameters})\n"
 
@@ -43,11 +49,17 @@ def sum_of_gaussians(x, *args):
     mus = args[2*n:3*n]
     return sum([gauss(x, A, sigma, mu) for A, sigma, mu in zip(As, sigmas, mus)])
 
+def const(x, b):
+    return b
+
 def linear(x, m, n):
     return m*x + n
 
 def quadratic(x, a, b, c):
     return a*x**2 + b*x + c
+
+def sum_of_gaussians_const(x, b, *args):
+    return const(x, b) + sum_of_gaussians(x, *args)
 
 def sum_of_gaussians_linear(x, m, n, *args):
     return linear(x, m, n) + sum_of_gaussians(x, *args)
@@ -61,6 +73,8 @@ with open(file, 'w') as f:
     f.write(header)
 
     f.writelines([generate_gauss(i) for i in range(110)])
+    f.write('\n')
+    f.writelines([generate_gauss(i, background = 'const') for i in range(11)])
     f.write('\n')
     f.writelines([generate_gauss(i, background = 'linear') for i in range(11)])
     f.write('\n')

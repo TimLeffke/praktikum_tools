@@ -463,7 +463,7 @@ def unpack_error(x):
 
 def gauss(x, paras: dict):
     from praktikum_tools.functions.gauss import getter
-    background = [None, 'linear', 'quadratic'][max(0, len(paras['background']) - 1) if hasattr(paras['background'], '__len__') else 0]
+    background = [None, 'const', 'linear', 'quadratic'][len(paras['background']) if hasattr(paras['background'], '__len__') else 0]
     f = getter(len(paras['A']), background = background)
     return f(x, *paras['background'], *paras['A'], *paras['sigma'], *paras['mu'])
 
@@ -491,7 +491,7 @@ def fit_gauss(x, y, n, background = None, A0 = None, sigma0 = None, mu0 = None, 
     f = getter(n, background)
 
     if background0: background_size = len(background0)
-    else: background_size = 2 * (background == 'linear') + 3 * (background == 'quadratic')
+    else: background_size = (background == 'const') + 2 * (background == 'linear') + 3 * (background == 'quadratic')
 
     p0 = [1 for _ in range(3*n + background_size)]
 
