@@ -137,7 +137,13 @@ class ErrValue:
         return round(self, ndigits)
 
 class Style:
-    style = 'ggplot'
+    style_list = ['seaborn-v0_8', 'ggplot', 'default']
+    for Style in style_list:
+        if Style in plt.style.available:
+            style = Style
+            break
+    else:
+        raise Exception("None of the choosen styles are available")
     dpi = 300
 
 plt.style.use(Style.style)
