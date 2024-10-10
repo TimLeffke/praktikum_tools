@@ -239,6 +239,9 @@ class Plot:
             else:
                 plt.axvspan(value.value*self.scale_x, stop.value*self.scale_x, alpha = alpha, color = color, **kwargs)
             return self
+    def hist(self, x, **kwargs):
+        x, _ = unpack_error(x)
+        plt.hist(x, **kwargs)
     def heatmap(self, z, x = None, y = None, zlabel = None, **kwargs):
         z, _ = unpack_error(z)
         x, _ = unpack_error(x)
