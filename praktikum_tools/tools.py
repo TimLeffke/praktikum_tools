@@ -165,6 +165,27 @@ def plot_spectra(x, y, yerr = None, title = None, ylabel = None, xlabel = None, 
 
 class Plot:
     def __init__(self, title = None, xlabel = None, ylabel = None, legend = False, log = None, scale_x = 1, scale_y = 1, legend_color = None):
+        """
+        Parameters
+        ----------
+        title : str, optional
+            The title to be displayed at the top of the plot.
+        xlabel, ylabel : str, optional
+            A label for the corresponding axis.
+        legend : bool, optional
+            Whether or not a legend should be drawn.
+        log : bool, str, optional
+            Select whether the axis should be in logarithmic scale.
+            If True, both axes are drawn in log.
+            If string, the x axis is drawn in log if 'x' is in the string,
+            same with 'y'.
+        scale_x, scale_y : float, int, optional
+            Factor to scale the corresponding axis.
+            This is useful for converting with SI units. If the x unit is in e.g m
+            but you want to plot in nm you can use scale_x = 1000.
+        legend_color : str, list[str], optional
+            Color to use for legend text.
+        """
         self.legend = legend
         if not title is None: plt.title(title)
         if not xlabel is None: plt.xlabel(xlabel)
