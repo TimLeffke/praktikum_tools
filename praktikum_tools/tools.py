@@ -248,13 +248,16 @@ class Plot:
         y, _ = unpack_error(y)
 
         if x is None or y is None:
-            raise NotImplemented()
-        else:
-            plt.pcolormesh(x, y, z, cmap = 'viridis', **kwargs)
-            if zlabel is None:
-                plt.colorbar()
+            if type(z) is np.ndarray:
+                x = np.linspace(0, 1, z.shape[0])
+                y = np.linspace(0, 1, z.shape[1])
             else:
-                plt.colorbar(label = zlabel)
+                raise NotImplemented()
+        plt.pcolormesh(x, y, z, cmap = 'viridis', **kwargs)
+        if zlabel is None:
+            plt.colorbar()
+        else:
+            plt.colorbar(label = zlabel)
         return self
     def hline(self, y, *args, **kwargs):
         plt.axhline(y*self.scale_y, *args, **kwargs)
