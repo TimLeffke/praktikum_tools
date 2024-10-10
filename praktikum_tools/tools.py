@@ -253,6 +253,9 @@ class Plot:
                 y = np.linspace(0, 1, z.shape[1])
             else:
                 raise NotImplemented()
+        if type(x) is np.ndarray and type(y) is np.ndarray:
+            if x.ndim == 1 and y.ndim == 1:
+                x, y = np.meshgrid(x, y)
         plt.pcolormesh(x, y, z, cmap = 'viridis', **kwargs)
         if zlabel is None:
             plt.colorbar()
