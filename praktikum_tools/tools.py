@@ -204,7 +204,7 @@ class Plot:
     def add(self, x, y = None, show_error = True, autoscale = True, **kwargs):
         if y is None:
             y, yerr = unpack_error(x)
-            x, xerr = unpack_error(list(range(len(y))))
+            x, xerr = unpack_error(np.arange(len(y)))
         else:
             y, yerr = unpack_error(y)
             x, xerr = unpack_error(x)
