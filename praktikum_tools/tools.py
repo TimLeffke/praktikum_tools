@@ -204,7 +204,7 @@ class Plot:
     def add(self, x, y = None, show_error = True, autoscale = True, **kwargs):
         if y is None:
             y, yerr = unpack_error(x)
-            x, xerr = unpack_error(list(range(len(y))))
+            x, xerr = unpack_error(np.arange(len(y)))
         else:
             y, yerr = unpack_error(y)
             x, xerr = unpack_error(x)
@@ -270,8 +270,8 @@ class Plot:
 
         if x is None or y is None:
             if type(z) is np.ndarray:
-                x = np.linspace(0, 1, z.shape[0])
-                y = np.linspace(0, 1, z.shape[1])
+                x = np.linspace(0, 1, z.shape[1])
+                y = np.linspace(0, 1, z.shape[0])
             else:
                 raise NotImplemented()
         if type(x) is np.ndarray and type(y) is np.ndarray:
