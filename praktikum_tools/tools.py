@@ -215,9 +215,13 @@ class Plot:
             else:
                 plt.plot(x*self.scale_x, y*self.scale_y, '.', linestyle = '', **kwargs)
         return self
-    def line(self, x, y, label = None, show_error = True, autoscale = True, **kwargs):
-        y, yerr = unpack_error(y)
-        x, _ = unpack_error(x)
+    def line(self, x, y = None, label = None, show_error = True, autoscale = True, **kwargs):
+        if y is None:
+            y, yerr = unpack_error(x)
+            x, _ = unpack_error(np.arange(len(y)))
+        else:
+            y, yerr = unpack_error(y)
+            x, _ = unpack_error(x)
 
         with self.autoscale(autoscale):
             if label is None:
