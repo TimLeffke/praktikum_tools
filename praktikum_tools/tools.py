@@ -263,7 +263,7 @@ class Plot:
     def hist(self, x, **kwargs):
         x, _ = unpack_error(x)
         plt.hist(x, **kwargs)
-    def heatmap(self, z, x = None, y = None, zlabel = None, **kwargs):
+    def heatmap(self, z, x = None, y = None, zlabel = None, contour = False, **kwargs):
         z, _ = unpack_error(z)
         x, _ = unpack_error(x)
         y, _ = unpack_error(y)
@@ -282,6 +282,7 @@ class Plot:
             plt.colorbar()
         else:
             plt.colorbar(label = zlabel)
+        if contour: plt.contour(x, y, z)
         return self
     def hline(self, y, *args, **kwargs):
         plt.axhline(y*self.scale_y, *args, **kwargs)
