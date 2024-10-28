@@ -110,7 +110,8 @@ class ErrValue:
             return self
         elif type(self.value) is np.ndarray:
             if type(self.error) is np.ndarray:
-                return ErrValue(self.value.mean(), np.sqrt(np.sum(self.error**2))/self.error.size)
+                err = 1/np.sum(1/self.error)
+                return ErrValue(np.sum(self.value/self.error) * err, err)
             else:
                 return ErrValue(self.value.mean(), self.error/np.sqrt(self.value.size))
         else: raise Exception('Huups!!!')
