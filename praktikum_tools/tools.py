@@ -216,9 +216,13 @@ class Plot:
             else:
                 plt.plot(x*self.scale_x, y*self.scale_y, '.', linestyle = '', **kwargs)
         return self
-    def line(self, x, y, label = None, show_error = True, autoscale = True, **kwargs):
-        y, yerr = unpack_error(y)
-        x, _ = unpack_error(x)
+    def line(self, x, y = None, label = None, show_error = True, autoscale = True, **kwargs):
+        if y is None:
+            y, yerr = unpack_error(x)
+            x, _ = unpack_error(np.arange(len(y)))
+        else:
+            y, yerr = unpack_error(y)
+            x, _ = unpack_error(x)
 
         with self.autoscale(autoscale):
             if label is None:
@@ -264,7 +268,7 @@ class Plot:
     def hist(self, x, **kwargs):
         x, _ = unpack_error(x)
         plt.hist(x, **kwargs)
-    def heatmap(self, z, x = None, y = None, zlabel = None, **kwargs):
+    def heatmap(self, z, x = None, y = None, zlabel = None, contour = False, **kwargs):
         z, _ = unpack_error(z)
         x, _ = unpack_error(x)
         y, _ = unpack_error(y)
@@ -283,6 +287,7 @@ class Plot:
             plt.colorbar()
         else:
             plt.colorbar(label = zlabel)
+        if contour: plt.contour(x, y, z)
         return self
     def hline(self, y, *args, **kwargs):
         plt.axhline(y*self.scale_y, *args, **kwargs)
