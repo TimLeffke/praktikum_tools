@@ -247,7 +247,9 @@ class Plot:
             if show_error:
                 plt.fill_between(rang*self.scale_x, ((m+merr)*rang + (n+nerr))*self.scale_y, ((m-merr)*rang + (n-nerr))*self.scale_y, alpha = 0.15)
         return self
-    def func(self, f, x, param = (), overdraw = True, **kwargs):
+    def func(self, f, param = (), x = None, overdraw = True, **kwargs):
+        if x is None:
+            x = plt.gca().get_xlim()
         x = smooth_range(x, overdraw = overdraw)
         self.line(x, f(x, *param), autoscale = not overdraw, **kwargs)
         return self
