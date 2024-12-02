@@ -233,9 +233,11 @@ class Plot:
                 error_area = np.array([y - yerr, y + yerr])*self.scale_y
                 plt.fill_between(x*self.scale_x, np.min(error_area, axis = 0), np.max(error_area, axis = 0), alpha = .15)
         return self
-    def linear(self, m, n, x, label = None, show_error = True, autoscale = False, **kwargs):
+    def linear(self, m, n, x = None, label = None, show_error = True, autoscale = False, **kwargs):
         m, merr = unpack_error(m)
         n, nerr = unpack_error(n)
+        if x is None:
+            x = np.asarray(plt.gca().get_xlim())
         x, _ = unpack_error(x)
         padding = 0 if autoscale else (x.max() - x.min()) / 2
         rang = np.linspace(x.min() - padding, x.max() + padding, 1000)
