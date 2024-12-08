@@ -425,6 +425,10 @@ def linear_fit(x, y):
         return linear_fit_both_error(x, y)
     x, _ = unpack_error(x)
     y, yerr = unpack_error(y)
+    if type(yerr) is list:
+        yerr = np.asarray(yerr)
+    elif type(yerr) is not np.ndarray:
+        yerr = np.ones(y.shape) * yerr
 
 
     xy = x*y
