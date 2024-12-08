@@ -121,6 +121,10 @@ class ErrValue:
         return ErrValue(np.cos(self.value), np.abs(np.sin(self.value)*self.error))
     def tan(self):
         return ErrValue(np.tan(self.value), np.abs(self.error/np.cos(self.value)**2))
+    def arcsin(self):
+        return ErrValue(np.arcsin(self.value), np.abs(self.error/np.sqrt(1-self.value**2)))
+    def arccos(self):
+        return ErrValue(np.arccos(self.value), np.abs(self.error/np.sqrt(1-self.value**2)))
     def from_list(l, error = None):
         if error is None:
             if type(l) is ErrValue or type(l[0]) is ErrValue:
@@ -353,6 +357,15 @@ def cos(x):
     """Return the cosine of x."""
     if type(x) is ErrValue: return x.cos()
     else: return np.cos(x)
+
+def arcsin(x):
+    """Return the inverse of sine of x."""
+    if type(x) is ErrValue: return x.arcsin()
+
+def arccos(x):
+    """Return the inverse of cosine of x."""
+    if type(x) is ErrValue: return x.arccos()
+    else: return np.arccos(x)
 
 def tan(x):
     """Return the tangent of x."""
