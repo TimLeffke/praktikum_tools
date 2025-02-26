@@ -372,7 +372,7 @@ def tan(x):
     if type(x) is ErrValue: return x.tan()
     else: return np.tan(x)
 
-def load_from_csv(path: str, delimiter = ','):
+def load_from_csv(path: str, delimiter = ',', data_type = []):
     """Return values from a comma-seperated file as a list of numpy arrays."""
     with open(path, 'r') as f:
         values = [[]]
@@ -382,10 +382,12 @@ def load_from_csv(path: str, delimiter = ','):
             for i, Element in enumerate(Line.strip().split(delimiter)):
                 if i >= len(values):
                     values.append([None for _ in range(len(values[0])-1)])
+
+                Type = data_type[i] if i<len(data_type) else float
                 try:
-                    values[i].append(float(Element))
+                    values[i].append(Type(Element))
                 except ValueError:
-                    raise ValueError(f"Couldn't interpret value '{Element}' in line {Line_num} as float!")
+                    raise ValueError(f"Couldn't interpret value '{Element}' in line {Line_num} as type {Type}!")
     if len(values) == 1:
         return np.array(values[0])
     else:
