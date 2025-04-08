@@ -277,9 +277,11 @@ class Plot:
             else:
                 plt.axvspan(value.value*self.scale_x, stop.value*self.scale_x, alpha = alpha, color = color, **kwargs)
             return self
-    def hist(self, x, **kwargs):
+    def hist(self, x, int_bins = False, **kwargs):
         x, _ = unpack_error(x)
-        plt.hist(x, **kwargs)
+        if int_bins:
+            plt.hist(x, bins=np.arange(min(x), max(x)+1)-0.5)
+        else: plt.hist(x, **kwargs)
     def heatmap(self, z, x = None, y = None, zlabel = None, contour = False, **kwargs):
         z, _ = unpack_error(z)
         x, _ = unpack_error(x)
@@ -383,7 +385,10 @@ def load_from_csv(path: str, delimiter = ',', data_type = []):
                 if i >= len(values):
                     values.append([None for _ in range(len(values[0])-1)])
 
-                Type = data_type[i] if i<len(data_type) else float
+                if type(data_type) is list:
+                    Type = data_type[i] if i<len(data_type) else float
+                else:
+                    Type = data_type
                 try:
                     values[i].append(Type(Element))
                 except ValueError:
