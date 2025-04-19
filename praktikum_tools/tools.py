@@ -280,7 +280,7 @@ class Plot:
     def hist(self, x, int_bins = False, **kwargs):
         x, _ = unpack_error(x)
         if int_bins:
-            plt.hist(x, bins=np.arange(min(x), max(x)+1)-0.5)
+            plt.hist(x, bins=np.arange(min(x), max(x)+2)-0.5)
         else: plt.hist(x, **kwargs)
     def heatmap(self, z, x = None, y = None, zlabel = None, contour = False, **kwargs):
         z, _ = unpack_error(z)
