@@ -4,7 +4,7 @@ from contextlib import contextmanager
 
 class ErrValue:
     __array_ufunc__ = None
-    def __init__(self, value, error = 0):
+    def __init__(self, value, error = 0.0):
         if not type(value) in (int, float, np.ndarray, np.float64, np.float32, np.int64, np.int32):
             raise TypeError(f'Value of type {type(value)} not supported!')
         if not type(error) in (int, float, np.ndarray, np.float64, np.float32, np.int64, np.int32):
@@ -37,7 +37,7 @@ class ErrValue:
         return self*other
     def __truediv__(self, other):
         if type(other) in (int, float, np.ndarray, np.float64, np.float32, np.int64, np.int32):
-            return ErrValue(self.value/other, self.error/other)
+            return ErrValue(self.value/other, np.abs(self.error/other))
         elif type(other) is ErrValue:
             return ErrValue(self.value/other.value, ((self.error/other.value)**2 + (self.value*other.error/other.value**2)**2)**.5)
         else: raise TypeError(f'Type {type(other)} is not supported!')
@@ -125,6 +125,10 @@ class ErrValue:
         return ErrValue(np.arcsin(self.value), np.abs(self.error/np.sqrt(1-self.value**2)))
     def arccos(self):
         return ErrValue(np.arccos(self.value), np.abs(self.error/np.sqrt(1-self.value**2)))
+    def sum(self):
+        return ErrValue(np.sum(self.value), np.sqrt(np.sum(self.error**2)))
+    def cumsum(self):
+        return ErrValue(np.cumsum(self.value), np.sqrt(np.cumsum(self.error**2)))
     def from_list(l, error = None):
         if error is None:
             if type(l) is ErrValue or type(l[0]) is ErrValue:
@@ -142,16 +146,33 @@ class ErrValue:
         return round(self, ndigits)
 
 class Style:
-    style_list = ['seaborn-v0_8', 'ggplot', 'default']
-    for Style in style_list:
-        if Style in plt.style.available:
-            style = Style
-            break
-    else:
-        raise Exception("None of the choosen styles are available")
+    style_list = ['ggplot', 'seaborn-v0_8']
     dpi = 300
+    def __init__(self):
+        for s in Style.style_list:
+            if s in plt.style.available:
+                self.preset = s
+                break
+        else: raise Exception("None of the choosen presets are available")
 
-plt.style.use(Style.style)
+    def _apply(self):
+        plt.style.use('default')
+        plt.style.use(self._preset)
+        plt.rcParams['pgf.texsystem'] = 'pdflatex'
+        plt.rcParams['errorbar.capsize'] = 2.0
+
+    @property
+    def preset(self): self._preset
+
+    @preset.setter
+    def preset(self, preset):
+        if preset not in plt.style.available and preset !='default':
+            raise Exception(f"Preset {preset} not available!")
+        self._preset = preset
+        self._apply()
+
+style = Style()
+
 
 def plot_spectra(x, y, yerr = None, title = None, ylabel = None, xlabel = None, path = None, show = False, **kwargs) -> None:
     if type(y) is ErrValue:
@@ -169,7 +190,7 @@ def plot_spectra(x, y, yerr = None, title = None, ylabel = None, xlabel = None, 
     plt.close('all')
 
 class Plot:
-    def __init__(self, title = None, xlabel = None, ylabel = None, legend = False, log = None, scale_x = 1, scale_y = 1, legend_color = None):
+    def __init__(self, title = None, xlabel = None, ylabel = None, legend = False, log = None, scale_x: float = 1, scale_y: float = 1, legend_color = None, draw_scale: float = 1):
         """
         Parameters
         ----------
@@ -190,6 +211,8 @@ class Plot:
             but you want to plot in nm you can use scale_x = 1000.
         legend_color : str, list[str], optional
             Color to use for legend text.
+        draw_scale : float
+            Scale plot lines, legend and text by this amount
         """
         self.legend = legend
         if not title is None: plt.title(title)
@@ -206,7 +229,10 @@ class Plot:
         self.scale_x = scale_x
         self.scale_y = scale_y
         self.legend_color = legend_color
-    def add(self, x, y = None, show_error = True, autoscale = True, **kwargs):
+        self.draw_scale = draw_scale
+    def add(self, x, y = None, show_error = True, autoscale = True, fmt='.', **kwargs):
+        if type(x) is list: x = np.array(x)
+        if type(y) is list: y = np.array(y)
         if y is None:
             y, yerr = unpack_error(x)
             x, xerr = unpack_error(np.arange(len(y)))
@@ -216,11 +242,13 @@ class Plot:
 
         with self.autoscale(autoscale):
             if show_error:
-               plt.errorbar(x*self.scale_x, y*self.scale_y, xerr=xerr*self.scale_x, yerr=yerr*self.scale_y, fmt='.', **kwargs)
+               plt.errorbar(x*self.scale_x, y*self.scale_y, xerr=xerr*self.scale_x, yerr=yerr*self.scale_y, fmt=fmt, **kwargs)
             else:
-                plt.plot(x*self.scale_x, y*self.scale_y, '.', linestyle = '', **kwargs)
+                plt.plot(x*self.scale_x, y*self.scale_y, fmt, linestyle = '', **kwargs)
         return self
     def line(self, x, y = None, label = None, show_error = True, autoscale = True, **kwargs):
+        if type(x) is list: x = np.array(x)
+        if type(y) is list: y = np.array(y)
         if y is None:
             y, yerr = unpack_error(x)
             x, _ = unpack_error(np.arange(len(y)))
@@ -303,8 +331,11 @@ class Plot:
             plt.colorbar(label = zlabel)
         if contour: plt.contour(x, y, z)
         return self
-    def hline(self, y, *args, **kwargs):
-        plt.axhline(y*self.scale_y, *args, **kwargs)
+    def hline(self, y, show_error=True, **kwargs):
+        y, yerr = unpack_error(y)
+        if show_error and np.sum(yerr):
+            self.linear(0, ErrValue(y, yerr), show_error=show_error, **kwargs)
+        else: plt.axhline(y*self.scale_y, **kwargs)
         return self
     def vline(self, x, *args, **kwargs):
         plt.axvline(x*self.scale_x, *args, **kwargs)
@@ -326,14 +357,33 @@ class Plot:
         else:
             yield
     def show(self):
-        self.make_legend()
-        plt.show()
+        with scale_plot(self.draw_scale):
+            self.make_legend()
+            plt.tight_layout()
+            plt.show()
         return self
     def save(self, path, **kwargs):
-        self.make_legend()
-        plt.savefig(path, dpi = Style.dpi, **kwargs)
+        with scale_plot(self.draw_scale):
+            self.make_legend()
+            plt.tight_layout()
+            if 'dpi' in kwargs:
+                plt.savefig(path, **kwargs)
+            else:
+                plt.savefig(path, dpi = Style.dpi, **kwargs)
         return self
     def delete(self): plt.close('all')
+
+@contextmanager
+def scale_plot(scale: float):
+    if scale != 1:
+        to_change = ['font.size', 'axes.labelsize', 'axes.titlesize', 'xtick.labelsize', 'ytick.labelsize', 'lines.linewidth', 'lines.markersize', 'legend.fontsize']
+        old_params = {Name: plt.rcParams[Name] for Name in to_change}
+        for Name in to_change:
+            plt.rcParams[Name] *= scale
+        yield
+        for Name, Value in old_params.items():
+            plt.rcParams[Name] = Value
+    else: yield
 
 def sqrt(x):
     """Return the square root of x."""
@@ -374,11 +424,23 @@ def tan(x):
     if type(x) is ErrValue: return x.tan()
     else: return np.tan(x)
 
-def load_from_csv(path: str, delimiter = ',', data_type = []):
+def sum(x):
+    if type(x) is ErrValue: return x.sum()
+    else: return np.sum(x)
+
+def cumsum(x):
+    if type(x) is ErrValue: return x.cumsum()
+    else: return np.cumsum(x)
+
+def mean(x, *args, **kwargs):
+    if type(x) is ErrValue: return x.mean()
+    else: return np.mean(x, *args, **kwargs)
+
+def load_from_csv(path: str, delimiter = ',', data_type = [], skip_lines = 0):
     """Return values from a comma-seperated file as a list of numpy arrays."""
     with open(path, 'r') as f:
         values = [[]]
-        for Line_num, Line in enumerate(f.readlines()):
+        for Line_num, Line in enumerate(f.readlines()[skip_lines:]):
             Line = Line.split('#')[0]
             if not Line: continue
             for i, Element in enumerate(Line.strip().split(delimiter)):
@@ -473,7 +535,7 @@ def linear_fit(x, y):
     m_err = np.sqrt(mitvar/(x.size*(mitx2-mitx*mitx)))
     n_err = np.sqrt(mitvar*mitx2/(x.size*(mitx2-mitx*mitx)))
 
-    chi_sq = np.sum(((y - (m*x + n)) / yerr)**2)
+    chi_sq = np.sum(((y - (m*x + n)) / yerr)**2) / (x.size - 2)
 
 
     return ErrValue(m, m_err), ErrValue(n, n_err), chi_sq
@@ -499,7 +561,7 @@ def linear_fit_both_error(x, y):
 
     merr = (1/D * np.sum(1/tot_err_sq))**.5
 
-    chi_sq = np.sum(((y - (m*x + n)) / yerr)**2)
+    chi_sq = np.sum(((y - (m*x + n)) / yerr)**2) / (x.size - 2)
 
 
     return ErrValue(m, merr), ErrValue(n, nerr), chi_sq
