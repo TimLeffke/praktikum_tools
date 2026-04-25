@@ -171,6 +171,14 @@ class Style:
         self._preset = preset
         self._apply()
 
+    def use_spezi(self):
+        from cycler import cycler
+        plt.rcParams['axes.prop_cycle'] = cycler(color=['#fcb246ff',
+                                                        '#f68823ff',
+                                                        '#e90015ff',
+                                                        '#eb007aff',
+                                                        '#30267eff'])
+
 style = Style()
 
 
