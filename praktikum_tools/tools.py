@@ -173,11 +173,11 @@ class Style:
 
     def use_spezi(self):
         from cycler import cycler
-        plt.rcParams['axes.prop_cycle'] = cycler(color=['#fcb246ff',
+        plt.rcParams['axes.prop_cycle'] = cycler(color=['#e90015ff',
+                                                        '#30267eff',
                                                         '#f68823ff',
-                                                        '#e90015ff',
-                                                        '#eb007aff',
-                                                        '#30267eff'])
+                                                        '#fcb246ff',
+                                                        '#eb007aff'])
 
 style = Style()
 
