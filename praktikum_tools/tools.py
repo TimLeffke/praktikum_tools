@@ -2,68 +2,39 @@ import numpy as np
 import matplotlib.pyplot as plt
 from contextlib import contextmanager
 
+N_ERROR_VALUES = 10_000
+
 class ErrValue:
-    __array_ufunc__ = None
-    def __init__(self, value, error = 0.0):
+    def __init__(self, value, error = 0.0, cloud=None):
         if not type(value) in (int, float, np.ndarray, np.float64, np.float32, np.int64, np.int32):
             raise TypeError(f'Value of type {type(value)} not supported!')
-        if not type(error) in (int, float, np.ndarray, np.float64, np.float32, np.int64, np.int32):
-            raise TypeError(f'Value of type {type(error)} not supported!')
-        self.value = value
-        self.error = error
-    def __add__(self, other):
-        if type(other) in (int, float, np.ndarray, np.float64, np.float32, np.int64, np.int32):
-            return ErrValue(self.value + other, self.error)
-        elif type(other) is ErrValue:
-            return ErrValue(self.value + other.value, (self.error**2 + other.error**2)**.5)
-        else: raise TypeError(f'Type {type(other)} is not supported!')
-    def __radd__(self, other):
-        return self + other
-    def __sub__(self, other):
-        if type(other) in (int, float, np.ndarray, np.float64, np.float32, np.int64, np.int32):
-            return ErrValue(self.value - other, self.error)
-        elif type(other) is ErrValue:
-            return ErrValue(self.value - other.value, (self.error**2 + other.error**2)**.5)
-        else: raise TypeError(f'Type {type(other)} is not supported!')
-    def __rsub__(self, other):
-        return self*(-1) + other
-    def __mul__(self, other):
-        if type(other) in (int, float, np.ndarray, np.float64, np.float32, np.int64, np.int32):
-            return ErrValue(self.value*other, np.abs(self.error * other))
-        elif type(other) is ErrValue:
-            return ErrValue(self.value*other.value, ((self.error*other.value)**2 + (self.value*other.error)**2)**.5)
-        else: raise TypeError(f'Type {type(other)} is not supported!')
-    def __rmul__(self, other):
-        return self*other
-    def __truediv__(self, other):
-        if type(other) in (int, float, np.ndarray, np.float64, np.float32, np.int64, np.int32):
-            return ErrValue(self.value/other, np.abs(self.error/other))
-        elif type(other) is ErrValue:
-            return ErrValue(self.value/other.value, ((self.error/other.value)**2 + (self.value*other.error/other.value**2)**2)**.5)
-        else: raise TypeError(f'Type {type(other)} is not supported!')
-    def __rtruediv__(self, other):
-        if type(other) is ErrValue:
-            return ErrValue(other.value/self.value, np.sqrt((other.value/self.value**2 * self.error)**2 + (other.error/self.value)**2))
+        self.value = np.asanyarray(value)
+
+        if cloud is not None:
+            self.cloud = cloud
         else:
-            return ErrValue(other/self.value, np.abs(other/self.value**2 * self.error))
-    def __pow__(self, other):
-        if type(other) is ErrValue:
-            return ErrValue(self.value**other.value, np.sqrt((other.value*self.error*self.value**(other.value-1))**2 + (self.value**other.value*np.log(self.value)*other.error)**2))
+            if not type(error) in (int, float, np.ndarray, np.float64, np.float32, np.int64, np.int32):
+                raise TypeError(f'Error of type {type(error)} not supported!')
+            self.error = error
+    @property
+    def error(self):
+        return self.cloud.std(axis=0)
+    @error.setter
+    def error(self, std):
+        if type(std) is np.ndarray:
+            self.cloud = np.random.normal(loc=self.value, scale=std, size=(N_ERROR_VALUES, *self.value.shape))
         else:
-            return ErrValue(self.value**other, np.abs(self.error*other*self.value**(other-1)))
-    def __rpow__(self, other):
-        if type(other) is ErrValue:
-            return ErrValue(other.value**self.value, np.sqrt((self.value*other.error*other.value**(self.value-1))**2 + (other.value**self.value*np.log(other.value)*self.error)**2))
-        else:
-            return ErrValue(other**self.value, np.abs(other**self.value*np.log(self.value)*self.error))
-    def __neg__(self):
-        return -1*self
-    def sqrt(self):
-        return self**.5
-    def exp(self):
-        return ErrValue(np.exp(self.value), np.exp(self.value)*self.error)
-    def log(self):
-        return ErrValue(np.log(self.value), self.error / np.abs(self.value))
+            self.cloud = np.random.normal(loc=self.value, scale=std, size=(N_ERROR_VALUES, *self.value.shape))
+    def get_asymetrical_error(self):
+        upper = np.std(self.cloud, where=self.cloud >= self.value, mean=self.value, axis=0)
+        lower = np.std(self.cloud, where=self.cloud <= self.value, mean=self.value, axis=0)
+        return lower, upper
+    def __add__(self, other): return np.add(self, other)
+    def __radd__(self, other): return np.add(other, self)
+    def __mul__(self, other): return np.multiply(self, other)
+    def __rmul__(self, other): return np.multiply(other, self)
+    def __truediv__(self, other): return np.divide(self, other)
+    def __rtruetiv__(self, other): return np.divide(other, self)
     def __repr__(self):
         if type(self.value) in (int, float, np.float64, np.float32, np.int64, np.int32):
             if type(self.error) in (int, float, np.float64, np.float32, np.int64, np.int32): return f'{self.value} ± {self.error}'
@@ -74,76 +45,30 @@ class ErrValue:
                 return '\n'.join([f'{Value} ± {self.error}' for Value in self.value])
             else:
                 return '\n'.join([f'{Value} ± {Error}' for Value, Error in zip(self.value, self.error)])
+    def __len__(self): return self.value.size
     def __getitem__(self, key):
-        if type(self.value) is np.ndarray:
-            if type(self.error) is np.ndarray:
-                return ErrValue(self.value[key], self.error[key])
+        if isinstance(key, slice) or isinstance(key, np.ndarray):
+            return ErrValue(self.value[key], cloud=self.cloud[key])
+        return ErrValue(self.value[key], cloud=self.cloud[key])
+    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+        if method != '__call__':
+            return NotImplemented
+
+        val_inputs = []
+        cloud_inputs = []
+        for x in inputs:
+            if isinstance(x, ErrValue):
+                val_inputs.append(x.value)
+                cloud_inputs.append(x.cloud)
             else:
-                return ErrValue(self.value[key], self.error)
-        else:
-            raise Exception('Single Error Value not subscriptable!')
-    def __len__(self):
-        if type(self.value) is np.ndarray: return self.value.size
-        else: return 1
-    def __round__(self, n = None):
-        return ErrValue(round(self.value, n), round(self.error, n))
-    def __gt__(self, other):
-        if type(other) is ErrValue:
-            return self.value > other.value
-        else: return self.value > other
-    def __lt__(self, other):
-        if type(other) is ErrValue:
-            return self.value < other.value
-        else: return self.value < other
-    def __ge__(self, other):
-        if type(other) is ErrValue:
-            return self.value >= other.value
-        else: return self.value >= other
-    def __le__(self, other):
-        if type(other) is ErrValue:
-            return self.value <= other.value
-        else: return self.value <= other
-    def __abs__(self):
-        return ErrValue(np.abs(self.value), self.error)
-    def mean(self):
-        if type(self.value) in (int, float, np.float64, np.float32, np.int64, np.int32):
-            return self
-        elif type(self.value) is np.ndarray:
-            if type(self.error) is np.ndarray:
-                err = 1/np.sum(1/self.error)
-                return ErrValue(np.sum(self.value/self.error) * err, err)
-            else:
-                return ErrValue(self.value.mean(), self.error/np.sqrt(self.value.size))
-        else: raise Exception('Huups!!!')
-    def sin(self):
-        return ErrValue(np.sin(self.value), np.abs(np.cos(self.value)*self.error))
-    def cos(self):
-        return ErrValue(np.cos(self.value), np.abs(np.sin(self.value)*self.error))
-    def tan(self):
-        return ErrValue(np.tan(self.value), np.abs(self.error/np.cos(self.value)**2))
-    def arcsin(self):
-        return ErrValue(np.arcsin(self.value), np.abs(self.error/np.sqrt(1-self.value**2)))
-    def arccos(self):
-        return ErrValue(np.arccos(self.value), np.abs(self.error/np.sqrt(1-self.value**2)))
-    def sum(self):
-        return ErrValue(np.sum(self.value), np.sqrt(np.sum(self.error**2)))
-    def cumsum(self):
-        return ErrValue(np.cumsum(self.value), np.sqrt(np.cumsum(self.error**2)))
-    def from_list(l, error = None):
-        if error is None:
-            if type(l) is ErrValue or type(l[0]) is ErrValue:
-                return ErrValue(np.array([L.value for L in l]), np.array([L.error for L in l]))
-            else: raise Exception("Need an error value!")
-        else:
-            if type(l) is ErrValue: raise Exception("Two error value supplied!")
-            else: return ErrValue(l, error)
-#    def __round__(self, ndigits = None):
-#        if ndigits == None:
-#            return self.roundsmart()
-#        return ErrValue(round(self.value, ndigits), round(self.error, ndigits))
-    def roundsmart(self, nsigdigits = 2):
-        ndigits = (nsigdigits - np.ceil(np.log10(self.error))).astype(np.int64)
-        return round(self, ndigits)
+                val_inputs.append(x)
+                cloud_inputs.append(x)
+
+        # Compute the operation across the entire batch at once
+        new_value = ufunc(*val_inputs, **kwargs)
+        new_cloud = ufunc(*cloud_inputs, **kwargs)
+
+        return ErrValue(new_value, cloud=new_cloud)
 
 class Style:
     style_list = ['ggplot', 'seaborn-v0_8']
@@ -181,21 +106,6 @@ class Style:
 
 style = Style()
 
-
-def plot_spectra(x, y, yerr = None, title = None, ylabel = None, xlabel = None, path = None, show = False, **kwargs) -> None:
-    if type(y) is ErrValue:
-        if yerr: yerr = y.error
-        y = y.value
-    if type(x) is ErrValue:
-        x = x.value
-    if yerr is None: plt.plot(x, y, **kwargs)
-    else: plt.errorbar(x, y, yerr = yerr, **kwargs)
-    if not title is None: plt.title(title)
-    if not ylabel is None: plt.ylabel(ylabel)
-    if not xlabel is None: plt.xlabel(xlabel)
-    if not path is None: plt.savefig(path, dpi = Style.dpi)
-    if show: plt.show()
-    plt.close('all')
 
 class Plot:
     def __init__(self, title = None, xlabel = None, ylabel = None, legend = False, log = None, scale_x: float = 1, scale_y: float = 1, legend_color = None, draw_scale: float = 1):
@@ -241,16 +151,25 @@ class Plot:
     def add(self, x, y = None, show_error = True, autoscale = True, fmt='.', **kwargs):
         if type(x) is list: x = np.array(x)
         if type(y) is list: y = np.array(y)
+
         if y is None:
-            y, yerr = unpack_error(x)
-            x, xerr = unpack_error(np.arange(len(y)))
-        else:
-            y, yerr = unpack_error(y)
-            x, xerr = unpack_error(x)
+            y = x
+            x = np.arange(x.size)
+
+        x_err_lower = None 
+        x_err_upper = None 
+        y_err_lower = None 
+        y_err_upper = None 
+        if type(x) is ErrValue:
+            x_err_lower, x_err_upper = x.get_asymetrical_error()
+            x = x.value
+        if type(y) is ErrValue:
+            y_err_lower, y_err_upper = y.get_asymetrical_error()
+            y = y.value
 
         with self.autoscale(autoscale):
             if show_error:
-               plt.errorbar(x*self.scale_x, y*self.scale_y, xerr=xerr*self.scale_x, yerr=yerr*self.scale_y, fmt=fmt, **kwargs)
+               plt.errorbar(x*self.scale_x, y*self.scale_y, xerr=np.array([x_err_lower, x_err_upper])*self.scale_x, yerr=np.array([y_err_lower, y_err_upper])*self.scale_y, fmt=fmt, **kwargs)
             else:
                 plt.plot(x*self.scale_x, y*self.scale_y, fmt, linestyle = '', **kwargs)
         return self
@@ -392,53 +311,6 @@ def scale_plot(scale: float):
         for Name, Value in old_params.items():
             plt.rcParams[Name] = Value
     else: yield
-
-def sqrt(x):
-    """Return the square root of x."""
-    if type(x) is ErrValue: return x.sqrt()
-    else: return np.sqrt(x)
-
-def exp(x):
-    """Return the natural exponential of x."""
-    if type(x) is ErrValue: return x.exp()
-    else: return np.exp(x)
-
-def log(x):
-    """Return the natural log of x."""
-    if type(x) is ErrValue: return x.log()
-    else: return np.log(x)
-
-def sin(x):
-    """Return the sine of x."""
-    if type(x) is ErrValue: return x.sin()
-    else: return np.sin(x)
-
-def cos(x):
-    """Return the cosine of x."""
-    if type(x) is ErrValue: return x.cos()
-    else: return np.cos(x)
-
-def arcsin(x):
-    """Return the inverse of sine of x."""
-    if type(x) is ErrValue: return x.arcsin()
-
-def arccos(x):
-    """Return the inverse of cosine of x."""
-    if type(x) is ErrValue: return x.arccos()
-    else: return np.arccos(x)
-
-def tan(x):
-    """Return the tangent of x."""
-    if type(x) is ErrValue: return x.tan()
-    else: return np.tan(x)
-
-def sum(x):
-    if type(x) is ErrValue: return x.sum()
-    else: return np.sum(x)
-
-def cumsum(x):
-    if type(x) is ErrValue: return x.cumsum()
-    else: return np.cumsum(x)
 
 def mean(x, *args, **kwargs):
     if type(x) is ErrValue: return x.mean()
