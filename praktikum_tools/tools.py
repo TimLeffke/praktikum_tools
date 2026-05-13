@@ -159,6 +159,8 @@ class Style:
         plt.style.use('default')
         plt.style.use(self._preset)
         plt.rcParams['pgf.texsystem'] = 'pdflatex'
+        plt.rcParams['text.usetex'] = True
+        plt.rcParams['font.family'] = 'serif'
         plt.rcParams['errorbar.capsize'] = 2.0
 
     @property
